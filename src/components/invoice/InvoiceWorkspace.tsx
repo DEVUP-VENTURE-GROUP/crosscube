@@ -96,7 +96,7 @@ export function InvoiceWorkspace() {
           <Button variant="primary" onClick={() => void createNew()}>
             Start a new invoice
           </Button>
-          <Link href="/invoices" className="inline-flex h-9 items-center px-3 text-sm text-accent hover:underline">
+          <Link href="/invoices" className="inline-flex h-9 items-center px-3 text-sm text-zinc-900 underline underline-offset-4 hover:no-underline">
             View invoices
           </Link>
         </div>
@@ -106,10 +106,10 @@ export function InvoiceWorkspace() {
   if (!reference || !invoice || invoice.id !== id) {
     return (
       <main className="mx-auto max-w-[1600px] px-4 py-6" aria-busy="true">
-        <div className="h-6 w-48 animate-pulse rounded bg-slate-200" />
+        <div className="h-6 w-48 animate-pulse rounded bg-zinc-200" />
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <div className="h-96 animate-pulse rounded-lg bg-slate-200/70" />
-          <div className="h-96 animate-pulse rounded-lg bg-slate-200/70" />
+          <div className="h-96 animate-pulse rounded bg-zinc-200/70" />
+          <div className="h-96 animate-pulse rounded bg-zinc-200/70" />
         </div>
         <span className="sr-only">Loading invoice…</span>
       </main>
@@ -141,7 +141,7 @@ function SaveIndicator({ state, status }: { state: SaveState; status: Invoice["s
     error: "Save failed — retrying",
     conflict: "Changed elsewhere — reload",
   }[state.kind];
-  const tone = state.kind === "error" || state.kind === "conflict" ? "text-red-700" : "text-slate-500";
+  const tone = state.kind === "error" || state.kind === "conflict" ? "text-red-700" : "text-zinc-500";
   return (
     <span className={`text-xs ${tone}`} role="status" aria-live="polite">
       {text}
@@ -207,7 +207,7 @@ function DraftWorkspace({
   return (
     <main className="mx-auto max-w-[1600px] px-4 pt-4 pb-28 lg:pb-8">
       <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1">
-        <h1 className="text-lg font-semibold tracking-tight text-slate-900">
+        <h1 className="text-lg font-semibold tracking-tight text-zinc-900">
           {invoice.invoiceNumber ? `Invoice ${invoice.invoiceNumber}` : "Draft invoice"}
         </h1>
         {invoice.status === "DRAFT" && <Badge>Draft</Badge>}
@@ -246,10 +246,10 @@ function DraftWorkspace({
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-[1600px] items-center gap-3">
           <div className="min-w-0">
-            <div className="text-xs text-slate-500">Total</div>
+            <div className="text-xs text-zinc-500">Total</div>
             <div className="text-base font-semibold tabular-nums">{formatCents(totals.totalCents)}</div>
           </div>
           <div className="ml-auto">

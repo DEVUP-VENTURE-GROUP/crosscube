@@ -22,7 +22,7 @@ test.describe("sign in", () => {
     await page.goto("/catalog");
     await expect(page).toHaveURL(/\/login\?next=%2Fcatalog/);
     await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
-    await expect(page.getByText("Please sign in to continue.")).toBeVisible();
+    await expect(page.getByText("Sign in to continue.")).toBeVisible();
     await page.screenshot({ path: `${SHOTS}/login.png` });
 
     await page.getByLabel("Username").fill(USER);

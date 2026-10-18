@@ -99,7 +99,7 @@ export function InvoiceEditor({
 
           {fees.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs text-slate-500">Quick add:</span>
+              <span className="text-xs text-zinc-500">Quick add:</span>
               {fees.map((fee) => (
                 <Button key={fee.id} className="h-8 text-xs" disabled={disabled || onCatalog(fee.id)} onClick={() => addItem(fee)}>
                   + {fee.name} {formatCents(fee.unitPriceCents)}
@@ -131,7 +131,7 @@ export function InvoiceEditor({
                 </span>
               </div>
             )}
-            {notice && <p className="text-xs text-slate-500">{notice}</p>}
+            {notice && <p className="text-xs text-zinc-500">{notice}</p>}
           </div>
 
           <LineItemsTable
@@ -161,8 +161,8 @@ export function InvoiceEditor({
       <Panel title="Totals">
         <InvoiceTotals totals={editable ? computed.totals : invoice.totals} />
         {editable && (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
-            <p className="text-xs text-slate-500">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-100 pt-3">
+            <p className="text-xs text-zinc-500">
               {errorCount > 0
                 ? `${errorCount} ${errorCount === 1 ? "item needs" : "items need"} attention before finalizing.`
                 : warnings.length > 0

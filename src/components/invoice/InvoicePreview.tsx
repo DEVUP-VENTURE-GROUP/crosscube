@@ -34,9 +34,9 @@ export function InvoicePreview({ source, business }: { source: DocumentSource; b
   }, [paperWidth]);
 
   return (
-    <section aria-label="Invoice preview" className="rounded-lg border border-slate-200 bg-slate-100 p-3 sm:p-4">
-      <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
-        <span className="font-medium text-slate-700">Live preview</span>
+    <section aria-label="Invoice preview" className="rounded border border-zinc-200 bg-zinc-100 p-3 sm:p-4">
+      <div className="mb-2 flex items-center justify-between text-xs text-zinc-500">
+        <span className="font-medium text-zinc-700">Live preview</span>
         <span>
           {model.paperSize === "A4" ? "A4" : "US Letter"} · page breaks and page numbers are applied in the PDF
         </span>

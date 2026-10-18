@@ -154,7 +154,7 @@ export function CatalogItemForm({
           Cancel
         </Button>
       </div>
-      <p className="text-xs text-slate-500">Changing a price affects new and draft invoices only. Finalized invoices keep the prices they were issued with.</p>
+      <p className="text-xs text-zinc-500">Changing a price affects new and draft invoices only. Finalized invoices keep the prices they were issued with.</p>
     </form>
   );
 }

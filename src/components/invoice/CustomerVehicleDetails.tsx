@@ -61,21 +61,21 @@ function CustomerLookup({ update, disabled }: { update: Update; disabled: boolea
         )}
       </Field>
       {query.trim().length >= 2 && (
-        <div className="absolute z-20 mt-1 max-h-80 w-full overflow-auto rounded-md border border-slate-200 bg-white text-sm shadow-lg">
-          {status === "loading" && results.length === 0 && <p className="px-3 py-2 text-slate-500">Searching…</p>}
+        <div className="absolute z-20 mt-1 max-h-80 w-full overflow-auto rounded-md border border-zinc-200 bg-white text-sm shadow-lg">
+          {status === "loading" && results.length === 0 && <p className="px-3 py-2 text-zinc-500">Searching…</p>}
           {status === "error" && <p className="px-3 py-2 text-red-700">Customer search failed.</p>}
-          {status === "idle" && results.length === 0 && <p className="px-3 py-2 text-slate-500">No saved customers match. Enter details below; they are saved when the invoice is finalized.</p>}
+          {status === "idle" && results.length === 0 && <p className="px-3 py-2 text-zinc-500">No saved customers match. Enter details below; they are saved when the invoice is finalized.</p>}
           {results.map((customer) => (
-            <div key={customer.id} className="border-b border-slate-100 px-3 py-2 last:border-0">
-              <button type="button" className="w-full text-left hover:text-accent" onClick={() => pick(customer, null)}>
+            <div key={customer.id} className="border-b border-zinc-100 px-3 py-2 last:border-0">
+              <button type="button" className="w-full text-left hover:text-zinc-900" onClick={() => pick(customer, null)}>
                 <span className="font-medium">{customer.name}</span>
-                {customer.company && <span className="text-slate-500"> · {customer.company}</span>}
-                <span className="block text-xs text-slate-500">{customer.phone || customer.email}</span>
+                {customer.company && <span className="text-zinc-500"> · {customer.company}</span>}
+                <span className="block text-xs text-zinc-500">{customer.phone || customer.email}</span>
               </button>
               {customer.vehicles.map((vehicle) => (
-                <button key={vehicle.id} type="button" className="mt-1 block w-full rounded px-2 py-1 text-left text-xs text-slate-700 hover:bg-slate-100" onClick={() => pick(customer, vehicle)}>
-                  {vehicleLabel(vehicle) || "Vehicle"} {vehicle.vin && <span className="text-slate-500">· VIN {vehicle.vin}</span>}
-                  {vehicle.licensePlate && <span className="text-slate-500"> · {vehicle.licensePlate}</span>}
+                <button key={vehicle.id} type="button" className="mt-1 block w-full rounded px-2 py-1 text-left text-xs text-zinc-700 hover:bg-zinc-100" onClick={() => pick(customer, vehicle)}>
+                  {vehicleLabel(vehicle) || "Vehicle"} {vehicle.vin && <span className="text-zinc-500">· VIN {vehicle.vin}</span>}
+                  {vehicle.licensePlate && <span className="text-zinc-500"> · {vehicle.licensePlate}</span>}
                 </button>
               ))}
             </div>
@@ -122,15 +122,15 @@ export function CustomerVehicleDetails({ draft, update, errors, disabled }: { dr
     <div className="space-y-5">
       <CustomerLookup update={update} disabled={disabled} />
       {draft.customerId && (
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-zinc-500">
           Linked to a saved customer.{" "}
-          <button type="button" className="text-accent underline" disabled={disabled} onClick={() => update((d) => ({ ...d, customerId: null, vehicleId: null }))}>
+          <button type="button" className="text-zinc-900 underline" disabled={disabled} onClick={() => update((d) => ({ ...d, customerId: null, vehicleId: null }))}>
             Unlink
           </button>
         </p>
       )}
       <fieldset className="grid grid-cols-2 gap-3 sm:grid-cols-6">
-        <legend className="col-span-full mb-1 text-xs font-semibold tracking-wide text-slate-500 uppercase">Customer</legend>
+        <legend className="col-span-full mb-1 text-xs font-semibold tracking-wide text-zinc-500 uppercase">Customer</legend>
         {text("Name", draft.customer.name, (v) => setCustomer("name", v), "customer.name", { className: "col-span-2 sm:col-span-3", maxLength: 120 })}
         {text("Company", draft.customer.company, (v) => setCustomer("company", v), "customer.company", { className: "col-span-2 sm:col-span-3", maxLength: 120 })}
         <Field label="Phone type" className="col-span-1 sm:col-span-1">
@@ -152,7 +152,7 @@ export function CustomerVehicleDetails({ draft, update, errors, disabled }: { dr
       </fieldset>
 
       <fieldset className="grid grid-cols-2 gap-3 sm:grid-cols-6">
-        <legend className="col-span-full mb-1 text-xs font-semibold tracking-wide text-slate-500 uppercase">Vehicle</legend>
+        <legend className="col-span-full mb-1 text-xs font-semibold tracking-wide text-zinc-500 uppercase">Vehicle</legend>
         <Field label="Year" error={errors.get("vehicle.year")} className="col-span-1 sm:col-span-1">
           {(id, describedBy) => (
             <IntegerInput id={id} aria-describedby={describedBy} value={draft.vehicle.year} disabled={disabled} maxLength={4} onCommit={(v) => setVehicle("year", v)} />

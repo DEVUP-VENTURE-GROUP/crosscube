@@ -47,7 +47,7 @@ export function CatalogManager() {
     <main className="mx-auto max-w-6xl px-4 py-6">
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <h1 className="text-lg font-semibold tracking-tight">Catalog</h1>
-        <p className="text-sm text-slate-500">Parts, labor operations, shop supplies, hazardous-material and other authorized charges.</p>
+        <p className="text-sm text-zinc-500">Parts, labor operations, shop supplies, hazardous-material and other authorized charges.</p>
         <Button variant="primary" className="ml-auto" onClick={() => setEditing("new")}>
           New item
         </Button>
@@ -84,9 +84,9 @@ export function CatalogManager() {
         <Checkbox label="Show inactive" checked={showInactive} onChange={setShowInactive} />
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded border border-zinc-200 bg-white">
         <table className="w-full min-w-[760px] text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium tracking-wide text-slate-500 uppercase">
+          <thead className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-medium tracking-wide text-zinc-500 uppercase">
             <tr>
               <th className="px-3 py-2">Name</th>
               <th className="px-3 py-2">Type</th>
@@ -97,17 +97,17 @@ export function CatalogManager() {
               <th className="px-3 py-2" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-zinc-100">
             {items === null && !error && (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-slate-500">
+                <td colSpan={7} className="px-3 py-6 text-center text-zinc-500">
                   Loading…
                 </td>
               </tr>
             )}
             {items !== null && visible.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-slate-500">
+                <td colSpan={7} className="px-3 py-6 text-center text-zinc-500">
                   {items.length === 0 ? "The catalog is empty. Add your first item, or run npm run db:seed for demonstration data." : "No items match these filters."}
                 </td>
               </tr>
@@ -115,7 +115,7 @@ export function CatalogManager() {
             {visible.map((item) => {
               const tax = item.taxCategoryId ? taxById.get(item.taxCategoryId) : null;
               return (
-                <tr key={item.id} className={item.active ? "" : "text-slate-400"}>
+                <tr key={item.id} className={item.active ? "" : "text-zinc-400"}>
                   <td className="px-3 py-2">
                     <span className="font-medium">{item.name}</span>
                     <span className="ml-2 inline-flex gap-1">

@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   serverExternalPackages: ["puppeteer", "mongodb"],
   poweredByHeader: false,
+  devIndicators: false,
   async headers() {
     return [
       {

@@ -104,12 +104,12 @@ export function InvoiceReview({
 
         <Panel title="Payments received">
           {draft.payments.length > 0 && (
-            <ul className="mb-3 divide-y divide-slate-100 text-sm">
+            <ul className="mb-3 divide-y divide-zinc-100 text-sm">
               {draft.payments.map((payment) => (
                 <li key={payment.id} className="flex items-center gap-3 py-1.5">
-                  <span className="w-24 text-slate-600">{formatCalendarDate(payment.receivedAt)}</span>
+                  <span className="w-24 text-zinc-600">{formatCalendarDate(payment.receivedAt)}</span>
                   <span className="w-14">{METHOD_LABELS[payment.method]}</span>
-                  <span className="min-w-0 flex-1 truncate text-slate-500">{payment.reference}</span>
+                  <span className="min-w-0 flex-1 truncate text-zinc-500">{payment.reference}</span>
                   <span className="tabular-nums">{formatCents(payment.amountCents)}</span>
                   <Button variant="ghost" className="h-8 px-2 text-xs" onClick={() => update((d) => ({ ...d, payments: d.payments.filter((p) => p.id !== payment.id) }))}>
                     Remove
@@ -135,7 +135,7 @@ export function InvoiceReview({
           </Field>
         </Panel>
 
-        <section id="invoice-actions" aria-label="Create invoice" className="rounded-lg border border-slate-200 bg-white p-4">
+        <section id="invoice-actions" aria-label="Create invoice" className="rounded border border-zinc-200 bg-white p-4">
           <InvoiceTotals totals={computed.totals} />
           {message && (
             <div className="mt-3">
@@ -147,14 +147,14 @@ export function InvoiceReview({
               )}
             </div>
           )}
-          <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center">
+          <div className="mt-4 flex flex-col gap-2 border-t border-zinc-100 pt-4 sm:flex-row sm:items-center">
             {!confirming ? (
               <Button variant="primary" disabled={errors.length > 0 || busy !== null} onClick={() => setConfirming(true)}>
                 Finalize invoice
               </Button>
             ) : (
-              <div className="flex flex-wrap items-center gap-2 rounded-md bg-slate-50 p-2" role="group" aria-label="Confirm finalization">
-                <span className="text-sm text-slate-700">Assign a permanent number and lock all prices?</span>
+              <div className="flex flex-wrap items-center gap-2 rounded-md bg-zinc-50 p-2" role="group" aria-label="Confirm finalization">
+                <span className="text-sm text-zinc-700">Assign a permanent number and lock all prices?</span>
                 <Button
                   variant="primary"
                   disabled={busy !== null}
@@ -178,7 +178,7 @@ export function InvoiceReview({
               {busy === "download" ? "Preparing PDF…" : "Download draft PDF"}
             </Button>
           </div>
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-zinc-500">
             Finalizing recalculates every total on the server, assigns the next invoice number, and stores an unchangeable snapshot. Draft PDFs are watermarked.
           </p>
         </section>
@@ -189,12 +189,12 @@ export function InvoiceReview({
   const finalized = invoice.status === "FINALIZED";
   return (
     <div className="space-y-4">
-      <section id="invoice-actions" aria-label="Invoice" className="rounded-lg border border-slate-200 bg-white p-4">
+      <section id="invoice-actions" aria-label="Invoice" className="rounded border border-zinc-200 bg-white p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-sm text-slate-500">Invoice</p>
+            <p className="text-sm text-zinc-500">Invoice</p>
             <p className="text-2xl font-semibold tracking-tight tabular-nums">{invoice.invoiceNumber}</p>
-            {invoice.finalizedAt && <p className="text-xs text-slate-500">Finalized {new Date(invoice.finalizedAt).toLocaleString()}</p>}
+            {invoice.finalizedAt && <p className="text-xs text-zinc-500">Finalized {new Date(invoice.finalizedAt).toLocaleString()}</p>}
           </div>
           <Button variant="primary" disabled={busy !== null} onClick={() => void download()}>
             {busy === "download" ? "Preparing PDF…" : "Download PDF"}
@@ -211,7 +211,7 @@ export function InvoiceReview({
             <Alert>Void: {invoice.voidReason}</Alert>
           </div>
         )}
-        <div className="mt-4 border-t border-slate-100 pt-3">
+        <div className="mt-4 border-t border-zinc-100 pt-3">
           <InvoiceTotals totals={invoice.totals} />
         </div>
       </section>
@@ -236,7 +236,7 @@ export function InvoiceReview({
 
       {finalized && (
         <Panel title="Corrections">
-          <p className="mb-3 text-sm text-slate-600">Finalized invoices cannot be edited. Void this invoice, then reissue it as a new draft with a new number.</p>
+          <p className="mb-3 text-sm text-zinc-600">Finalized invoices cannot be edited. Void this invoice, then reissue it as a new draft with a new number.</p>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
             <Field label="Reason for voiding" className="flex-1">
               {(id) => <TextInput id={id} value={voidReason} maxLength={500} onChange={(event) => setVoidReason(event.target.value)} />}
@@ -259,7 +259,7 @@ export function InvoiceReview({
 
       {invoice.status === "VOID" && (
         <Panel title="Reissue">
-          <p className="mb-3 text-sm text-slate-600">Create a new draft with this invoice’s customer, vehicle and lines. Prices are re-checked against the current catalog when it is finalized.</p>
+          <p className="mb-3 text-sm text-zinc-600">Create a new draft with this invoice’s customer, vehicle and lines. Prices are re-checked against the current catalog when it is finalized.</p>
           <Button
             variant="primary"
             disabled={busy !== null}
@@ -279,7 +279,7 @@ export function InvoiceReview({
         <ol className="space-y-1 text-sm">
           {invoice.events.map((event, index) => (
             <li key={index} className="flex gap-3">
-              <span className="w-40 shrink-0 text-slate-500">{new Date(event.at).toLocaleString()}</span>
+              <span className="w-40 shrink-0 text-zinc-500">{new Date(event.at).toLocaleString()}</span>
               <span>
                 {event.type.replace(/_/g, " ").toLowerCase()}
                 {event.type === "PRICE_OVERRIDE" && ` · ${event.details.catalogPrice} → ${event.details.usedPrice} (${event.details.reason})`}

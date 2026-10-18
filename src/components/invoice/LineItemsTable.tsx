@@ -35,20 +35,20 @@ export function LineItemsTable({
   return (
     <div>
       <div className="mb-1.5 flex items-baseline justify-between">
-        <h3 className="text-xs font-semibold tracking-wide text-slate-500 uppercase">{title}</h3>
-        <span className="text-xs text-slate-500">
+        <h3 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">{title}</h3>
+        <span className="text-xs text-zinc-500">
           {rows.length} {rows.length === 1 ? "line" : "lines"}
         </span>
       </div>
-      <div className="hidden grid-cols-[minmax(0,1fr)_5.5rem_7rem_6rem_2.25rem] gap-2 border-b border-slate-200 px-1 pb-1 text-[11px] font-medium tracking-wide text-slate-500 uppercase sm:grid">
+      <div className="hidden grid-cols-[minmax(0,1fr)_5.5rem_7rem_6rem_2.25rem] gap-2 border-b border-zinc-200 px-1 pb-1 text-[11px] font-medium tracking-wide text-zinc-500 uppercase sm:grid">
         <span>Description</span>
         <span className="text-right">Qty</span>
         <span className="text-right">Unit price</span>
         <span className="text-right">Total</span>
         <span />
       </div>
-      {rows.length === 0 && <p className="px-1 py-3 text-sm text-slate-500">{emptyText}</p>}
-      <ul className="divide-y divide-slate-100">
+      {rows.length === 0 && <p className="px-1 py-3 text-sm text-zinc-500">{emptyText}</p>}
+      <ul className="divide-y divide-zinc-100">
         {rows.map(({ index, input, computed }) => {
           const item = catalog.get(input.catalogItemId);
           const path = `lines.${index}`;
@@ -66,7 +66,7 @@ export function LineItemsTable({
                     disabled={disabled}
                     onChange={(event) => onChange(index, { description: event.target.value })}
                   />
-                  <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-zinc-500">
                     <Badge tone={input.kind === "LABOR" ? "blue" : input.kind === "PART" ? "slate" : "amber"}>{LINE_KIND_LABELS[input.kind]}</Badge>
                     {item?.sku && <span>SKU {item.sku}</span>}
                     {item && <span>per {item.unit}</span>}
@@ -92,7 +92,7 @@ export function LineItemsTable({
                   <div className="flex h-9 items-center justify-end text-sm font-medium tabular-nums">{formatCents(computed?.lineTotalCents ?? 0)}</div>
                 </div>
                 <div className="col-start-2 row-start-1 flex justify-end sm:col-start-auto sm:row-start-auto">
-                  <Button variant="ghost" className="h-9 w-9 px-0 text-slate-500" aria-label={`Remove ${input.description}`} disabled={disabled} onClick={() => onRemove(index)}>
+                  <Button variant="ghost" className="h-9 w-9 px-0 text-zinc-500" aria-label={`Remove ${input.description}`} disabled={disabled} onClick={() => onRemove(index)}>
                     <svg viewBox="0 0 20 20" className="size-4" aria-hidden="true">
                       <path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                     </svg>
@@ -121,7 +121,7 @@ export function LineItemsTable({
               )}
 
               <details className="mt-1.5 text-sm" open={input.notes !== "" || undefined}>
-                <summary className="cursor-pointer text-xs text-accent select-none">{input.notes ? "Service notes" : "Add service notes"}</summary>
+                <summary className="cursor-pointer text-xs text-zinc-900 select-none">{input.notes ? "Service notes" : "Add service notes"}</summary>
                 <TextArea
                   aria-label="Service notes"
                   className="mt-1.5"

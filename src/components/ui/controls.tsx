@@ -6,9 +6,9 @@ import { centsToInput, formatQuantity, parseMoneyToCents, parseQuantityToMilli }
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-accent text-white hover:bg-accent-strong disabled:bg-slate-300 disabled:text-slate-500",
-  secondary: "border border-slate-300 bg-white text-slate-800 hover:bg-slate-50 disabled:text-slate-400",
-  ghost: "text-slate-700 hover:bg-slate-100 disabled:text-slate-400",
+  primary: "bg-zinc-900 text-white hover:bg-black disabled:bg-zinc-300 disabled:text-zinc-500",
+  secondary: "border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 disabled:text-zinc-400",
+  ghost: "text-zinc-700 hover:bg-zinc-100 disabled:text-zinc-400",
   danger: "border border-red-300 bg-white text-red-700 hover:bg-red-50 disabled:text-red-300",
 };
 
@@ -17,13 +17,13 @@ export function Button({ variant = "secondary", className = "", ...props }: Butt
     <button
       type="button"
       {...props}
-      className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex h-9 items-center justify-center gap-1.5 rounded px-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed ${VARIANTS[variant]} ${className}`}
     />
   );
 }
 
 const INPUT =
-  "h-9 w-full rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25 disabled:bg-slate-100 disabled:text-slate-500 aria-[invalid=true]:border-red-500";
+  "h-9 w-full rounded border border-zinc-300 bg-white px-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none disabled:bg-zinc-50 disabled:text-zinc-500 aria-[invalid=true]:border-red-600";
 
 export function Field({ label, error, hint, children, className = "" }: { label: string; error?: string; hint?: string; children: (id: string, describedBy: string | undefined) => ReactNode; className?: string }) {
   const id = useId();
@@ -31,12 +31,12 @@ export function Field({ label, error, hint, children, className = "" }: { label:
   const message = error ?? hint;
   return (
     <div className={`min-w-0 ${className}`}>
-      <label htmlFor={id} className="mb-1 block text-xs font-medium text-slate-600">
+      <label htmlFor={id} className="mb-1 block text-xs text-zinc-600">
         {label}
       </label>
       {children(id, message ? messageId : undefined)}
       {message && (
-        <p id={messageId} className={`mt-1 text-xs ${error ? "text-red-600" : "text-slate-500"}`}>
+        <p id={messageId} className={`mt-1 text-xs ${error ? "text-red-600" : "text-zinc-500"}`}>
           {message}
         </p>
       )}
@@ -58,7 +58,7 @@ export function Select({ className = "", ...props }: SelectHTMLAttributes<HTMLSe
 
 export function Checkbox({ label, checked, onChange, disabled }: { label: string; checked: boolean; onChange: (value: boolean) => void; disabled?: boolean }) {
   return (
-    <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+    <label className="inline-flex items-center gap-2 text-sm text-zinc-700">
       <input type="checkbox" className="size-4 accent-accent" checked={checked} disabled={disabled} onChange={(event) => onChange(event.target.checked)} />
       {label}
     </label>
@@ -123,21 +123,21 @@ export function IntegerInput(props: Omit<Parameters<typeof ScaledInput>[0], "par
 
 export function Badge({ children, tone = "slate" }: { children: ReactNode; tone?: "slate" | "amber" | "green" | "red" | "blue" }) {
   const tones = {
-    slate: "bg-slate-100 text-slate-700 ring-slate-200",
+    slate: "bg-zinc-100 text-zinc-700 ring-zinc-200",
     amber: "bg-amber-50 text-amber-800 ring-amber-200",
     green: "bg-emerald-50 text-emerald-800 ring-emerald-200",
     red: "bg-red-50 text-red-700 ring-red-200",
     blue: "bg-blue-50 text-blue-800 ring-blue-200",
   };
-  return <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${tones[tone]}`}>{children}</span>;
+  return <span className={`inline-flex items-center rounded-sm px-1.5 py-px text-[11px] ring-1 ring-inset ${tones[tone]}`}>{children}</span>;
 }
 
 export function Panel({ title, actions, children, className = "" }: { title?: string; actions?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-lg border border-slate-200 bg-white ${className}`}>
+    <section className={`rounded border border-zinc-200 bg-white ${className}`}>
       {(title || actions) && (
-        <header className="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-2.5">
-          {title && <h2 className="text-sm font-semibold text-slate-900">{title}</h2>}
+        <header className="flex items-center justify-between gap-2 px-4 pt-3.5">
+          {title && <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>}
           {actions}
         </header>
       )}

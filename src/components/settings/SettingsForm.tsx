@@ -37,10 +37,10 @@ function TaxCategories() {
   const newRate = parsePercentToPpm(draft.rate);
   return (
     <Panel title="Tax categories">
-      <p className="mb-3 text-sm text-slate-600">
+      <p className="mb-3 text-sm text-zinc-600">
         Rates are applied per category to the summed taxable amount and rounded once (half up). Items without a category are not taxed. Confirm rates and taxability with your jurisdiction; changes apply to drafts, never to finalized invoices.
       </p>
-      <ul className="mb-4 divide-y divide-slate-100 text-sm">
+      <ul className="mb-4 divide-y divide-zinc-100 text-sm">
         {items.map((category) => {
           const editValue = edits[category.id] ?? formatRatePpm(category.ratePpm).replace("%", "");
           const ppm = parsePercentToPpm(editValue);
@@ -52,7 +52,7 @@ function TaxCategories() {
                 {category.isDemo && <span className="ml-2 text-xs text-amber-700">demo rate</span>}
               </span>
               <TextInput aria-label={`${category.name} rate percent`} className="w-24 text-right" value={editValue} onChange={(event) => setEdits({ ...edits, [category.id]: event.target.value })} />
-              <span className="text-slate-500">%</span>
+              <span className="text-zinc-500">%</span>
               <Checkbox label="Active" checked={category.active} onChange={(active) => void save(category, { code: category.code, name: category.name, ratePpm: category.ratePpm, active })} />
               <Button
                 className="h-8 text-xs"
@@ -107,7 +107,7 @@ export function SettingsForm() {
   }, []);
 
   if (!settings) {
-    return <main className="mx-auto max-w-4xl px-4 py-6">{message ? <Alert>{message.text}</Alert> : <p className="text-sm text-slate-500">Loading…</p>}</main>;
+    return <main className="mx-auto max-w-4xl px-4 py-6">{message ? <Alert>{message.text}</Alert> : <p className="text-sm text-zinc-500">Loading…</p>}</main>;
   }
 
   const set = <K extends keyof ShopSettings>(key: K, value: ShopSettings[K]) => setSettings({ ...settings, [key]: value });
@@ -185,9 +185,9 @@ export function SettingsForm() {
             {text("website", "Website", { className: "col-span-2 sm:col-span-3", max: 200 })}
             {text("email", "Email", { className: "col-span-2 sm:col-span-3", max: 254, type: "email" })}
             <div className="col-span-full flex flex-wrap items-center gap-3">
-              {settings.logoDataUrl && <img src={settings.logoDataUrl} alt="Current logo" className="h-12 max-w-40 rounded border border-slate-200 object-contain p-1" />}
-              <label className="text-sm text-slate-700">
-                <span className="mb-1 block text-xs font-medium text-slate-600">Logo (PNG or JPEG)</span>
+              {settings.logoDataUrl && <img src={settings.logoDataUrl} alt="Current logo" className="h-12 max-w-40 rounded border border-zinc-200 object-contain p-1" />}
+              <label className="text-sm text-zinc-700">
+                <span className="mb-1 block text-xs font-medium text-zinc-600">Logo (PNG or JPEG)</span>
                 <input type="file" accept="image/png,image/jpeg" className="text-sm" onChange={(event) => onLogo(event.target.files?.[0])} />
               </label>
               {settings.logoDataUrl && (
@@ -237,7 +237,7 @@ export function SettingsForm() {
             {saving ? "Saving…" : "Save settings"}
           </Button>
         </div>
-        <p className="text-xs text-slate-500">Business details are copied onto each invoice when it is finalized; changing them later does not alter issued invoices.</p>
+        <p className="text-xs text-zinc-500">Business details are copied onto each invoice when it is finalized; changing them later does not alter issued invoices.</p>
       </form>
 
       <TaxCategories />

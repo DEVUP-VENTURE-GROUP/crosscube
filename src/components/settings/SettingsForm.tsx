@@ -180,7 +180,8 @@ export function SettingsForm() {
             {text("state", "State", { className: "col-span-1", max: 40 })}
             {text("postalCode", "ZIP", { className: "col-span-1 sm:col-span-2", max: 20 })}
             {text("phone", "Phone", { className: "col-span-1 sm:col-span-3", max: 40, type: "tel" })}
-            {text("fax", "Fax", { className: "col-span-1 sm:col-span-3", max: 40, type: "tel" })}
+            {text("fax", "Fax", { className: "col-span-1 sm:col-span-2", max: 40, type: "tel" })}
+            {text("organizationNumber", "Org. #", { className: "col-span-2 sm:col-span-1", max: 30 })}
             {text("website", "Website", { className: "col-span-2 sm:col-span-3", max: 200 })}
             {text("email", "Email", { className: "col-span-2 sm:col-span-3", max: 254, type: "email" })}
             <div className="col-span-full flex flex-wrap items-center gap-3">

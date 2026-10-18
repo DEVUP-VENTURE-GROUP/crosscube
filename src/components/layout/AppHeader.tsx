@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CURRENT_DRAFT_KEY, readStorage } from "@/components/invoice/storage";
 
@@ -11,11 +11,49 @@ const SECONDARY = [
   { href: "/settings", label: "Settings" },
 ];
 
+function UserMenu() {
+  const router = useRouter();
+  const [username, setUsername] = useState<string | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
+  useEffect(() => {
+    fetch("/api/auth/session", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { username: string | null } | null) => setUsername(data?.username ?? null))
+      .catch(() => setUsername(null));
+  }, []);
+  if (!username) return null;
+  const signOut = async () => {
+    setSigningOut(true);
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
+    router.replace("/login");
+    router.refresh();
+  };
+  return (
+    <div className="ml-2 flex items-center gap-2 border-l border-slate-200 pl-3">
+      <span className="hidden items-center gap-2 text-sm text-slate-600 md:flex">
+        <span className="flex size-7 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white uppercase" aria-hidden="true">
+          {username.slice(0, 1)}
+        </span>
+        <span>{username}</span>
+      </span>
+      <button
+        type="button"
+        onClick={() => void signOut()}
+        disabled={signingOut}
+        className="h-8 rounded-md px-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-60"
+      >
+        {signingOut ? "Signing out…" : "Sign out"}
+      </button>
+    </div>
+  );
+}
+
 export function AppHeader() {
   const pathname = usePathname();
   const params = useSearchParams();
   const [storedId, setStoredId] = useState<string | null>(null);
   useEffect(() => setStoredId(readStorage(CURRENT_DRAFT_KEY)), [pathname]);
+  if (pathname === "/login") return null;
 
   const onWorkspace = pathname === "/invoice";
   const invoiceId = (onWorkspace ? params.get("id") : null) ?? storedId;
@@ -48,6 +86,7 @@ export function AppHeader() {
             </Link>
           ))}
         </nav>
+        <UserMenu />
       </div>
     </header>
   );

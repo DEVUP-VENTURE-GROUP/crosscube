@@ -4,6 +4,71 @@ import { expect, test, type Page } from "@playwright/test";
 const SHOTS = "artifacts/screens";
 mkdirSync(SHOTS, { recursive: true });
 
+const USER = "e2e-admin";
+const PASSWORD = "e2e-correct-horse-battery";
+
+async function signIn(page: Page, next = "/invoice") {
+  await page.goto(next);
+  await expect(page).toHaveURL(/\/login/);
+  await page.getByLabel("Username").fill(USER);
+  await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).not.toHaveURL(/\/login/);
+}
+
+test.describe("sign in", () => {
+  test("protects pages and APIs and returns to the requested page after login", async ({ page, request }) => {
+    expect((await request.get("/api/reference-data")).status()).toBe(401);
+    await page.goto("/catalog");
+    await expect(page).toHaveURL(/\/login\?next=%2Fcatalog/);
+    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+    await expect(page.getByText("Please sign in to continue.")).toBeVisible();
+    await page.screenshot({ path: `${SHOTS}/login.png` });
+
+    await page.getByLabel("Username").fill(USER);
+    await page.getByLabel("Password", { exact: true }).fill("wrong-password");
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page.locator("form").getByRole("alert")).toHaveText("Incorrect username or password.");
+    await expect(page.getByLabel("Password", { exact: true })).toHaveValue("");
+    await page.screenshot({ path: `${SHOTS}/login-error.png` });
+
+    await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
+    await page.getByRole("button", { name: "Show password" }).click();
+    await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute("type", "text");
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page).toHaveURL(/\/catalog$/);
+    await expect(page.getByText(USER, { exact: true })).toBeVisible();
+
+    const cookie = (await page.context().cookies()).find((c) => c.name === "inv_session")!;
+    expect(cookie.httpOnly).toBe(true);
+    expect(cookie.sameSite).toBe("Lax");
+
+    await page.goto("/login");
+    await expect(page).toHaveURL(/\/invoice/);
+
+    await page.getByRole("button", { name: "Sign out" }).click();
+    await expect(page).toHaveURL(/\/login/);
+    await page.goto("/invoices");
+    await expect(page).toHaveURL(/\/login\?next=%2Finvoices/);
+  });
+
+  test("rejects a forged session cookie", async ({ page, context }) => {
+    await context.addCookies([{ name: "inv_session", value: "eyJ1IjoiYWRtaW4iLCJpYXQiOjEsImV4cCI6OTk5OTk5OTk5OX0.AAAA", url: "http://localhost:3100" }]);
+    await page.goto("/invoice");
+    await expect(page).toHaveURL(/\/login/);
+  });
+
+  test("login page works on mobile", async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    const page = await context.newPage();
+    await page.goto("/login");
+    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
+    await page.screenshot({ path: `${SHOTS}/login-mobile.png` });
+    await context.close();
+  });
+});
+
 async function addFromSearch(page: Page, query: string, option: string) {
   const search = page.getByRole("combobox", { name: "Search parts, labor and fees" });
   await search.fill(query);
@@ -13,7 +78,7 @@ async function addFromSearch(page: Page, query: string, option: string) {
 }
 
 test("operator builds, finalizes and downloads the reference invoice", async ({ page }) => {
-  await page.goto("/invoice");
+  await signIn(page);
   await expect(page.getByRole("heading", { name: "Draft invoice" })).toBeVisible();
   await expect(page).toHaveURL(/id=.+&tab=items/);
 
@@ -96,7 +161,7 @@ test("operator builds, finalizes and downloads the reference invoice", async ({ 
 });
 
 test("unsaved required fields block finalization with clear messages", async ({ page }) => {
-  await page.goto("/invoice");
+  await signIn(page);
   await page.getByRole("button", { name: "New invoice" }).click();
   await expect(page.getByRole("heading", { name: "Draft invoice" })).toBeVisible();
   await page.getByRole("link", { name: "Create Invoice" }).click();
@@ -106,7 +171,7 @@ test("unsaved required fields block finalization with clear messages", async ({ 
 });
 
 test("catalog and settings pages load", async ({ page }) => {
-  await page.goto("/catalog");
+  await signIn(page, "/catalog");
   await expect(page.getByRole("cell", { name: /Motor Oil EDGE/ })).toBeVisible();
   await page.screenshot({ path: `${SHOTS}/catalog.png`, fullPage: true });
   await page.goto("/settings");
@@ -117,7 +182,7 @@ test("catalog and settings pages load", async ({ page }) => {
 test("mobile layout stacks editor and preview with a sticky action bar", async ({ browser }) => {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   const page = await context.newPage();
-  await page.goto("/invoice");
+  await signIn(page);
   await expect(page.getByRole("heading", { name: "Draft invoice" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Review & create", exact: true })).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);

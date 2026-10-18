@@ -51,15 +51,15 @@ Invoices embed lines, payments and audit events so every state change is a singl
 
 - Server-side validation of all input (zod, strict objects, bounded lengths and array sizes, 1 MB body limit, `application/json` required).
 - Kind, unit, SKU, catalog price and tax rate are always taken from the database, never from the client.
-- HTTP Basic auth middleware, required in production unless explicitly disabled; constant-time comparison.
-- Cross-site write protection (Sec-Fetch-Site / Origin checks) because Basic credentials are replayed automatically.
+- Sign-in page with a scrypt-hashed password, HMAC-signed HttpOnly SameSite=Lax session cookie (12 h, Secure on HTTPS), constant-time comparisons and per-IP/username rate limiting of failed attempts (in-process). Middleware protects every page and API route; expired API sessions return 401 and the client redirects to `/login`.
+- Cross-site write protection (Sec-Fetch-Site / Origin checks) on top of SameSite cookies.
 - PDF rendering: React-escaped markup, CSP `default-src 'none'` in the print page, all network requests from the page aborted, logos accepted only as PNG/JPEG data URLs, bounded concurrency/queue and timeouts.
 - Logs contain identifiers and counts only, never customer data. Unexpected errors return a reference id.
 - Security headers: `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: same-origin`.
 
 ## Known limitations
 
-- Single shared credential (Basic auth); no per-user accounts, roles or per-user audit attribution.
+- One configured login (from environment variables); no per-user accounts, roles or per-user audit attribution. Login rate limiting is per server process.
 - No discounts or post-tax charges as separate line types; use price changes with reasons or an "other charge" catalog item.
 - Tax supports one rate per category (no compound or jurisdiction lookup).
 - PDFs are regenerated from the stored snapshot on each download (not archived as files); a future template change would change how old invoices print, though never their numbers or amounts.

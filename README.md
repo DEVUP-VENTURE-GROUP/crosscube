@@ -26,7 +26,19 @@ npm run db:seed               # optional: demonstration catalog, settings and on
 npm run dev                   # http://localhost:3000
 ```
 
-Production: `npm run build && npm start`, with `BASIC_AUTH_USER` and `BASIC_AUTH_PASSWORD` set. The app refuses to serve in production without them unless `ALLOW_UNAUTHENTICATED=true`.
+### Login
+
+The app has its own sign-in page (`/login`). Create the credentials once:
+
+```bash
+npm run auth:hash-password        # prompts for a password (12+ characters)
+```
+
+Copy the printed `AUTH_PASSWORD_HASH` and `AUTH_SECRET` into `.env` and set `AUTH_USERNAME`. Only the scrypt hash is stored, never the password. Sessions are signed HttpOnly cookies valid for 12 hours; changing `AUTH_SECRET` signs everyone out. Failed sign-ins are rate-limited (5 per 15 minutes per IP and username).
+
+Without these variables the app runs open in development; in production it refuses to serve unless they are set or `ALLOW_UNAUTHENTICATED=true`.
+
+Production: `npm run build && npm start`.
 
 ### Environment variables
 
@@ -34,8 +46,10 @@ Production: `npm run build && npm start`, with `BASIC_AUTH_USER` and `BASIC_AUTH
 | --- | --- | --- |
 | `MONGODB_URI` | yes | Connection string for your MongoDB deployment |
 | `MONGODB_DB` | no (`auto_invoice`) | Database used by this app |
-| `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD` | in production | HTTP Basic auth for the whole app |
-| `ALLOW_UNAUTHENTICATED` | no | `true` disables the production auth requirement (only behind another auth layer) |
+| `AUTH_USERNAME` | in production | Sign-in username |
+| `AUTH_PASSWORD_HASH` | in production | scrypt hash from `npm run auth:hash-password` |
+| `AUTH_SECRET` | in production | 32+ character key that signs session cookies |
+| `ALLOW_UNAUTHENTICATED` | no | `true` disables the production login requirement (only behind another auth layer) |
 | `PUPPETEER_EXECUTABLE_PATH` | no | Use an installed Chrome/Chromium |
 | `PDF_MAX_CONCURRENCY` | no (`2`) | Parallel PDF renders per server process (excess requests queue, max 20, then 503) |
 | `PDF_RENDER_TIMEOUT_MS` | no (`20000`) | Per-render timeout |

@@ -190,7 +190,7 @@ export function buildInvoiceDocumentModel(source: DocumentSource, business: Busi
     businessAddress: [b.addressLine1, b.addressLine2, businessCity].filter(Boolean),
     businessContact: [b.phone && `Phone: ${b.phone}`, b.fax && `Fax: ${b.fax}`].filter(Boolean).join("   "),
     invoiceLabel: isFinal && source.invoiceNumber ? source.invoiceNumber : "DRAFT",
-    estimateNumber: source.estimateNumber,
+    estimateNumber: source.estimateNumber || b.organizationNumber || "",
     printedDate: formatInstantDate(printedAt, b.timeZone),
     customerHeading: [c.company, c.name].filter(Boolean).join(" - ").toUpperCase(),
     customerAddress: [c.addressLine1, c.addressLine2, cityLine].filter(Boolean),

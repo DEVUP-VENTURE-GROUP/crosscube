@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { hashPassword } from "../src/lib/auth/password";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { connect, setDbForTesting } from "../src/lib/db/mongo";
 import { seedDemoData } from "./seed";
@@ -15,7 +16,15 @@ await state.client.close();
 
 const server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "-p", port], {
   stdio: "inherit",
-  env: { ...process.env, MONGODB_URI: uri, MONGODB_DB: dbName, BASIC_AUTH_USER: "", BASIC_AUTH_PASSWORD: "", ALLOW_UNAUTHENTICATED: "true" },
+  env: {
+    ...process.env,
+    MONGODB_URI: uri,
+    MONGODB_DB: dbName,
+    AUTH_USERNAME: "e2e-admin",
+    AUTH_PASSWORD_HASH: await hashPassword("e2e-correct-horse-battery"),
+    AUTH_SECRET: "e2e-session-secret-0123456789abcdef0123456789",
+    ALLOW_UNAUTHENTICATED: "false",
+  },
 });
 
 const shutdown = async () => {

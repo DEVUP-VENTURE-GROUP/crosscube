@@ -26,6 +26,7 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
     if (error instanceof DOMException && error.name === "AbortError") throw error;
     throw new ApiError(0, "NETWORK", "Could not reach the server. Check your connection.");
   }
+  if (response.status === 401) redirectToLogin();
   if (response.status === 204) return undefined as T;
   const payload = (await response.json().catch(() => null)) as { error?: { code: string; message: string; issues?: Issue[] } } | null;
   if (!response.ok) {
@@ -35,8 +36,14 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
   return payload as T;
 }
 
+function redirectToLogin(): void {
+  const next = `${window.location.pathname}${window.location.search}`;
+  window.location.assign(`/login?next=${encodeURIComponent(next)}`);
+}
+
 export async function downloadFile(path: string): Promise<void> {
   const response = await fetch(path, { cache: "no-store" });
+  if (response.status === 401) redirectToLogin();
   if (!response.ok) {
     const payload = (await response.json().catch(() => null)) as { error?: { code: string; message: string } } | null;
     throw new ApiError(response.status, payload?.error?.code ?? "HTTP_ERROR", payload?.error?.message ?? "Download failed.");

@@ -19,13 +19,14 @@ export const MAX_LOGO_DATA_URL_LENGTH = 400_000;
 export const settingsInputSchema = z
   .object({
     businessName: text(120).min(1, "Business name is required"),
-    addressLine1: text(120),
+    addressLine1: text(120).min(1, "Street address is required"),
     addressLine2: text(120),
-    city: text(80),
-    state: text(40),
-    postalCode: text(20),
-    phone: text(40),
+    city: text(80).min(1, "City is required"),
+    state: text(40).min(1, "State is required"),
+    postalCode: text(20).min(1, "ZIP is required"),
+    phone: text(40).min(1, "Phone is required"),
     fax: text(40),
+    organizationNumber: text(30),
     website: text(200),
     email: text(254).refine((v) => v === "" || z.string().email().safeParse(v).success, "Invalid email"),
     logoDataUrl: z
@@ -64,6 +65,7 @@ export const DEFAULT_SETTINGS: ShopSettingsInput = {
   postalCode: "",
   phone: "",
   fax: "",
+  organizationNumber: "",
   website: "",
   email: "",
   logoDataUrl: null,

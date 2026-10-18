@@ -1,57 +1,45 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { authConfig } from "@/lib/auth/config";
+import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth/session";
 
-function timingSafeEqual(a: string, b: string): boolean {
-  let diff = a.length ^ b.length;
-  for (let i = 0; i < Math.max(a.length, b.length); i++) diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
-  return diff === 0;
+const PUBLIC_PATHS = new Set(["/login", "/api/auth/login", "/api/auth/logout", "/api/auth/session"]);
+
+function apiError(status: number, code: string, message: string) {
+  return NextResponse.json({ error: { code, message } }, { status });
 }
 
-function unauthorized(): NextResponse {
-  return new NextResponse("Authentication required.", {
-    status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="Invoice Generator", charset="UTF-8"' },
-  });
-}
-
-function checkAuth(request: NextRequest): NextResponse | null {
-  const user = process.env.BASIC_AUTH_USER;
-  const password = process.env.BASIC_AUTH_PASSWORD;
-  if (!user || !password) {
-    if (process.env.NODE_ENV === "production" && process.env.ALLOW_UNAUTHENTICATED !== "true") {
-      return new NextResponse("Authentication is not configured. Set BASIC_AUTH_USER and BASIC_AUTH_PASSWORD.", { status: 503 });
-    }
-    return null;
-  }
-  const header = request.headers.get("authorization") ?? "";
-  if (!header.startsWith("Basic ")) return unauthorized();
-  let decoded = "";
-  try {
-    decoded = atob(header.slice(6));
-  } catch {
-    return unauthorized();
-  }
-  const separator = decoded.indexOf(":");
-  const ok = separator > 0 && timingSafeEqual(decoded.slice(0, separator), user) && timingSafeEqual(decoded.slice(separator + 1), password);
-  return ok ? null : unauthorized();
-}
-
-// Basic auth is replayed by browsers automatically, so cross-site writes must be rejected explicitly.
-function checkCrossSite(request: NextRequest): NextResponse | null {
+// Session cookies are sent automatically, so cross-site writes must be rejected explicitly.
+function crossSiteBlock(request: NextRequest): NextResponse | null {
   if (["GET", "HEAD", "OPTIONS"].includes(request.method)) return null;
-  if (request.headers.get("sec-fetch-site") === "cross-site") {
-    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "Cross-site request rejected." } }, { status: 403 });
-  }
+  if (request.headers.get("sec-fetch-site") === "cross-site") return apiError(403, "BAD_REQUEST", "Cross-site request rejected.");
   const origin = request.headers.get("origin");
-  if (origin && origin !== request.nextUrl.origin) {
-    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "Origin mismatch." } }, { status: 403 });
-  }
+  if (origin && origin !== request.nextUrl.origin) return apiError(403, "BAD_REQUEST", "Origin mismatch.");
   return null;
 }
 
-export function middleware(request: NextRequest) {
-  return checkAuth(request) ?? checkCrossSite(request) ?? NextResponse.next();
+export async function middleware(request: NextRequest) {
+  const blocked = crossSiteBlock(request);
+  if (blocked) return blocked;
+
+  const { pathname, search } = request.nextUrl;
+  const config = authConfig();
+  if (config.mode === "misconfigured") {
+    return pathname.startsWith("/api/") ? apiError(503, "INTERNAL", config.reason) : new NextResponse(config.reason, { status: 503 });
+  }
+  if (config.mode === "disabled") {
+    return pathname === "/login" ? NextResponse.redirect(new URL("/invoice", request.url)) : NextResponse.next();
+  }
+
+  const session = await verifySessionToken(request.cookies.get(SESSION_COOKIE)?.value, config.secret);
+  if (pathname === "/login" && session) return NextResponse.redirect(new URL("/invoice", request.url));
+  if (PUBLIC_PATHS.has(pathname) || session) return NextResponse.next();
+
+  if (pathname.startsWith("/api/")) return apiError(401, "UNAUTHENTICATED", "Your session has expired. Sign in again.");
+  const login = new URL("/login", request.url);
+  if (pathname !== "/") login.searchParams.set("next", `${pathname}${search}`);
+  return NextResponse.redirect(login);
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt).*)"],
 };

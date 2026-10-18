@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --color-accent: #1f4e8c;
+  --color-accent-strong: #173c6c;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background: #f4f5f7;
+  color: #0f172a;
+}
+
+.invoice-paper {
+  background: #fff;
+  box-shadow: 0 0 0 1px rgb(15 23 42 / 0.08), 0 1px 3px rgb(15 23 42 / 0.08);
+  transform-origin: top left;
+}

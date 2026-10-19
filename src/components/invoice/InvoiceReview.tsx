@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Button, Field, MoneyInput, Panel, Select, TextArea, TextInput } from "@/components/ui/controls";
+import { Alert, Button, ConfirmButton, Field, MoneyInput, Panel, Select, TextArea, TextInput } from "@/components/ui/controls";
 import { api, ApiError, downloadFile } from "@/lib/http/client";
 import { formatCents } from "@/lib/money/money";
 import type { ComputedInvoice } from "@/modules/invoices/invoice.compute";
@@ -216,6 +216,39 @@ export function InvoiceReview({
         </div>
       </section>
 
+      {invoice.payments.length > 0 && (
+        <Panel title="Payments received">
+          <ul className="divide-y divide-zinc-100 text-sm">
+            {invoice.payments.map((payment) => (
+              <li key={payment.id} className="flex flex-wrap items-center gap-3 py-1.5">
+                <span className="w-24 text-zinc-600">{formatCalendarDate(payment.receivedAt)}</span>
+                <span className="w-14">{METHOD_LABELS[payment.method]}</span>
+                <span className="min-w-0 flex-1 truncate text-zinc-500">{payment.reference}</span>
+                <span className="tabular-nums">{formatCents(payment.amountCents)}</span>
+                {finalized && (
+                  <ConfirmButton
+                    className="h-8 text-xs"
+                    label="Remove"
+                    question="Remove this payment?"
+                    confirmLabel="Remove"
+                    onConfirm={() =>
+                      run("payment", async () => {
+                        const result = await api<{ invoice: Invoice }>(
+                          `/api/invoices/${invoice.id}/payments/${payment.id}?version=${invoice.version}`,
+                          { method: "DELETE" },
+                        );
+                        replaceInvoice(result.invoice);
+                        setMessage({ tone: "green", text: `Payment of ${formatCents(payment.amountCents)} removed. The removal is kept in the history.` });
+                      })
+                    }
+                  />
+                )}
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+
       {finalized && invoice.totals.balanceCents > 0 && (
         <Panel title="Record payment">
           <PaymentForm
@@ -283,7 +316,7 @@ export function InvoiceReview({
               <span>
                 {event.type.replace(/_/g, " ").toLowerCase()}
                 {event.type === "PRICE_OVERRIDE" && ` · ${event.details.catalogPrice} → ${event.details.usedPrice} (${event.details.reason})`}
-                {event.type === "PAYMENT_RECORDED" && ` · ${formatCents(Number(event.details.amountCents))}`}
+                {(event.type === "PAYMENT_RECORDED" || event.type === "PAYMENT_REMOVED") && ` · ${formatCents(Number(event.details.amountCents))}`}
                 {event.type === "VOIDED" && ` · ${event.details.reason}`}
               </span>
             </li>

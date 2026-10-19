@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CURRENT_DRAFT_KEY, readStorage } from "@/components/invoice/storage";
 
 const SECONDARY = [
   { href: "/invoices", label: "Invoices" },
+  { href: "/customers", label: "Customers" },
   { href: "/catalog", label: "Catalog" },
   { href: "/settings", label: "Settings" },
 ];
@@ -19,7 +20,6 @@ interface SessionInfo {
 export function AppHeader() {
   const pathname = usePathname();
   const params = useSearchParams();
-  const router = useRouter();
   const [storedId, setStoredId] = useState<string | null>(null);
   const [session, setSession] = useState<SessionInfo>({ username: null, businessName: null });
   const [signingOut, setSigningOut] = useState(false);
@@ -43,8 +43,8 @@ export function AppHeader() {
   const signOut = async () => {
     setSigningOut(true);
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
-    router.replace("/login");
-    router.refresh();
+    // Full page load: the client router may have cached the signed-in /login → /invoice redirect.
+    window.location.assign("/login");
   };
 
   const linkClass = (active: boolean) =>

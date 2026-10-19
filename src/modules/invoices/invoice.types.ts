@@ -59,7 +59,7 @@ export interface Payment {
 }
 
 export interface InvoiceEvent {
-  type: "CREATED" | "FINALIZED" | "PRICE_OVERRIDE" | "PAYMENT_RECORDED" | "VOIDED" | "REISSUED_FROM";
+  type: "CREATED" | "FINALIZED" | "PRICE_OVERRIDE" | "PAYMENT_RECORDED" | "PAYMENT_REMOVED" | "VOIDED" | "REISSUED_FROM";
   at: string;
   details: Record<string, string | number | null>;
 }

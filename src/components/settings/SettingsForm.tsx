@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, Button, Checkbox, Field, IntegerInput, Panel, Select, TextArea, TextInput } from "@/components/ui/controls";
+import { Alert, Button, Checkbox, ConfirmButton, Field, IntegerInput, Panel, Select, TextArea, TextInput } from "@/components/ui/controls";
 import { api, ApiError } from "@/lib/http/client";
 import { formatRatePpm, parsePercentToPpm } from "@/lib/money/money";
 import type { TaxCategory } from "@/modules/catalog/catalog.types";
@@ -10,72 +10,123 @@ import { MAX_LOGO_DATA_URL_LENGTH, PAPER_SIZES, type ShopSettings, type ShopSett
 
 type TextKey = { [K in keyof ShopSettingsInput]: ShopSettingsInput[K] extends string ? K : never }[keyof ShopSettingsInput];
 
+function TaxCategoryRow({ category, onSaved, onDeleted }: { category: TaxCategory; onSaved: (item: TaxCategory) => void; onDeleted: (id: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({ code: category.code, name: category.name, rate: formatRatePpm(category.ratePpm).replace("%", "") });
+  const [error, setError] = useState<string | null>(null);
+  const ppm = parsePercentToPpm(form.rate);
+
+  const save = async (input: { code: string; name: string; ratePpm: number; active: boolean }) => {
+    setError(null);
+    try {
+      const result = await api<{ item: TaxCategory }>(`/api/tax-categories/${category.id}`, { method: "PUT", body: input });
+      onSaved(result.item);
+      setEditing(false);
+    } catch (e) {
+      setError(e instanceof ApiError ? `${e.message} ${e.issues.map((i) => i.message).join(" ")}` : "Save failed.");
+    }
+  };
+
+  return (
+    <li className="py-2.5">
+      {!editing ? (
+        <div className="flex flex-wrap items-center gap-3 text-sm">
+          <span className="w-28 font-mono text-xs">{category.code}</span>
+          <span className="min-w-32 flex-1">
+            {category.name} · {formatRatePpm(category.ratePpm)}
+            {!category.active && <span className="ml-2 text-xs text-zinc-500">(off)</span>}
+            {category.isDemo && <span className="ml-2 text-xs text-amber-700">demo rate</span>}
+          </span>
+          <Checkbox label="Active" checked={category.active} onChange={(active) => void save({ code: category.code, name: category.name, ratePpm: category.ratePpm, active })} />
+          <Button className="h-8 text-xs" onClick={() => setEditing(true)}>
+            Edit
+          </Button>
+          <ConfirmButton
+            className="h-8 text-xs"
+            label="Delete"
+            question={`Delete ${category.code}?`}
+            onConfirm={async () => {
+              setError(null);
+              try {
+                await api(`/api/tax-categories/${category.id}`, { method: "DELETE" });
+                onDeleted(category.id);
+              } catch (e) {
+                setError(e instanceof ApiError ? e.message : "Delete failed.");
+              }
+            }}
+          />
+        </div>
+      ) : (
+        <form
+          className="grid grid-cols-2 gap-3 sm:grid-cols-[8rem_minmax(0,1fr)_7rem_auto_auto] sm:items-end"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (ppm !== null) void save({ code: form.code.trim().toUpperCase(), name: form.name.trim(), ratePpm: ppm, active: category.active });
+          }}
+        >
+          <Field label="Code">{(id) => <TextInput id={id} value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value.toUpperCase() })} />}</Field>
+          <Field label="Name">{(id) => <TextInput id={id} value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />}</Field>
+          <Field label="Rate %">{(id) => <TextInput id={id} inputMode="decimal" value={form.rate} onChange={(event) => setForm({ ...form, rate: event.target.value })} />}</Field>
+          <Button type="submit" variant="primary" disabled={!form.code || !form.name || ppm === null}>
+            Save
+          </Button>
+          <Button variant="ghost" onClick={() => setEditing(false)}>
+            Cancel
+          </Button>
+        </form>
+      )}
+      {error && <p className="mt-1.5 text-sm text-red-700">{error}</p>}
+    </li>
+  );
+}
+
 function TaxCategories() {
   const [items, setItems] = useState<TaxCategory[]>([]);
   const [draft, setDraft] = useState({ code: "", name: "", rate: "" });
-  const [edits, setEdits] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     api<{ items: TaxCategory[] }>("/api/tax-categories").then((data) => setItems(data.items), () => setError("Could not load tax categories."));
   }, []);
 
-  const save = async (category: TaxCategory | null, input: { code: string; name: string; ratePpm: number; active: boolean }) => {
-    setError(null);
-    try {
-      const result = category
-        ? await api<{ item: TaxCategory }>(`/api/tax-categories/${category.id}`, { method: "PUT", body: input })
-        : await api<{ item: TaxCategory }>("/api/tax-categories", { method: "POST", body: input });
-      setItems((current) => (category ? current.map((c) => (c.id === category.id ? result.item : c)) : [...current, result.item]));
-      return true;
-    } catch (e) {
-      setError(e instanceof ApiError ? `${e.message} ${e.issues.map((i) => i.message).join(" ")}` : "Save failed.");
-      return false;
-    }
-  };
-
   const newRate = parsePercentToPpm(draft.rate);
   return (
     <Panel title="Tax categories">
       <p className="mb-3 text-sm text-zinc-600">
-        Rates are applied per category to the summed taxable amount and rounded once (half up). Items without a category are not taxed. Confirm rates and taxability with your jurisdiction; changes apply to drafts, never to finalized invoices.
+        Rates are applied per category to the summed taxable amount and rounded once (half up). Items without a category are not taxed. Confirm rates and taxability with your jurisdiction; changes apply to drafts, never to finalized invoices. A category used by catalog items can be turned off but not deleted.
       </p>
-      <ul className="mb-4 divide-y divide-zinc-100 text-sm">
-        {items.map((category) => {
-          const editValue = edits[category.id] ?? formatRatePpm(category.ratePpm).replace("%", "");
-          const ppm = parsePercentToPpm(editValue);
-          return (
-            <li key={category.id} className="flex flex-wrap items-center gap-3 py-2">
-              <span className="w-28 font-mono text-xs">{category.code}</span>
-              <span className="min-w-32 flex-1">
-                {category.name}
-                {category.isDemo && <span className="ml-2 text-xs text-amber-700">demo rate</span>}
-              </span>
-              <TextInput aria-label={`${category.name} rate percent`} className="w-24 text-right" value={editValue} onChange={(event) => setEdits({ ...edits, [category.id]: event.target.value })} />
-              <span className="text-zinc-500">%</span>
-              <Checkbox label="Active" checked={category.active} onChange={(active) => void save(category, { code: category.code, name: category.name, ratePpm: category.ratePpm, active })} />
-              <Button
-                className="h-8 text-xs"
-                disabled={ppm === null || ppm === category.ratePpm}
-                onClick={() => void save(category, { code: category.code, name: category.name, ratePpm: ppm!, active: category.active })}
-              >
-                Save rate
-              </Button>
-            </li>
-          );
-        })}
+      <ul className="mb-4 divide-y divide-zinc-100">
+        {items.map((category) => (
+          <TaxCategoryRow
+            key={category.id}
+            category={category}
+            onSaved={(saved) => setItems((current) => current.map((c) => (c.id === saved.id ? saved : c)))}
+            onDeleted={(id) => setItems((current) => current.filter((c) => c.id !== id))}
+          />
+        ))}
+        {items.length === 0 && <li className="py-2 text-sm text-zinc-500">No tax categories. Items without one are not taxed.</li>}
       </ul>
       <form
         className="grid grid-cols-2 gap-3 sm:grid-cols-[8rem_minmax(0,1fr)_7rem_auto] sm:items-end"
         onSubmit={async (event) => {
           event.preventDefault();
           if (newRate === null) return;
-          if (await save(null, { code: draft.code.trim().toUpperCase(), name: draft.name.trim(), ratePpm: newRate, active: true })) setDraft({ code: "", name: "", rate: "" });
+          setError(null);
+          try {
+            const result = await api<{ item: TaxCategory }>("/api/tax-categories", {
+              method: "POST",
+              body: { code: draft.code.trim().toUpperCase(), name: draft.name.trim(), ratePpm: newRate, active: true },
+            });
+            setItems((current) => [...current, result.item]);
+            setDraft({ code: "", name: "", rate: "" });
+          } catch (e) {
+            setError(e instanceof ApiError ? `${e.message} ${e.issues.map((i) => i.message).join(" ")}` : "Save failed.");
+          }
         }}
       >
         <Field label="Code">{(id) => <TextInput id={id} value={draft.code} placeholder="PARTS" onChange={(event) => setDraft({ ...draft, code: event.target.value.toUpperCase() })} />}</Field>
         <Field label="Name">{(id) => <TextInput id={id} value={draft.name} placeholder="Sales Tax" onChange={(event) => setDraft({ ...draft, name: event.target.value })} />}</Field>
-        <Field label="Rate %">{(id) => <TextInput id={id} value={draft.rate} inputMode="decimal" placeholder="6.0" onChange={(event) => setDraft({ ...draft, rate: event.target.value })} />}</Field>
+        <Field label="Rate %">{(id) => <TextInput id={id} value={draft.rate} inputMode="decimal" placeholder="8.25" onChange={(event) => setDraft({ ...draft, rate: event.target.value })} />}</Field>
         <Button type="submit" disabled={!draft.code || !draft.name || newRate === null}>
           Add category
         </Button>

@@ -74,7 +74,7 @@ export async function updateCatalogItem(id: string, input: CatalogItemInput): Pr
   try {
     const doc = await (await db()).catalogItems.findOneAndUpdate(
       { _id: id },
-      { $set: { ...input, updatedAt: new Date() } },
+      { $set: { ...input, isDemo: false, updatedAt: new Date() } },
       { returnDocument: "after" },
     );
     if (!doc) throw notFound("Catalog item");
@@ -83,6 +83,14 @@ export async function updateCatalogItem(id: string, input: CatalogItemInput): Pr
     if (isDuplicateKey(error)) throw new AppError(409, "DUPLICATE", `SKU ${input.sku} is already used by another item.`);
     throw error;
   }
+}
+
+// Issued invoices keep their own line snapshots, so deleting an item never changes them; drafts using it are flagged.
+export async function deleteCatalogItem(id: string): Promise<void> {
+  const c = await db();
+  const result = await c.catalogItems.deleteOne({ _id: id });
+  if (result.deletedCount === 0) throw notFound("Catalog item");
+  await c.catalogItems.updateMany({ associatedLaborId: id }, { $set: { associatedLaborId: null, updatedAt: new Date() } });
 }
 
 export async function createTaxCategory(input: TaxCategoryInput): Promise<TaxCategory> {
@@ -110,4 +118,14 @@ export async function updateTaxCategory(id: string, input: TaxCategoryInput): Pr
     if (isDuplicateKey(error)) throw new AppError(409, "DUPLICATE", `Tax category code ${input.code} already exists.`);
     throw error;
   }
+}
+
+export async function deleteTaxCategory(id: string): Promise<void> {
+  const c = await db();
+  const inUse = await c.catalogItems.countDocuments({ taxCategoryId: id });
+  if (inUse > 0) {
+    throw new AppError(409, "DUPLICATE", `This tax category is used by ${inUse} catalog item${inUse === 1 ? "" : "s"}. Change those items first, or turn the category off instead.`);
+  }
+  const result = await c.taxCategories.deleteOne({ _id: id });
+  if (result.deletedCount === 0) throw notFound("Tax category");
 }

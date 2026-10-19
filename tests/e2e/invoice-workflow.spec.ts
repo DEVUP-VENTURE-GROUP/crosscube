@@ -190,3 +190,42 @@ test("mobile layout stacks editor and preview with a sticky action bar", async (
   await page.screenshot({ path: `${SHOTS}/mobile.png`, fullPage: true });
   await context.close();
 });
+
+test("customers can be added, edited and deleted with their vehicles", async ({ page }) => {
+  await signIn(page, "/customers");
+  await page.getByRole("button", { name: "New customer" }).click();
+  await page.getByLabel("Name", { exact: true }).fill("Casey Driver");
+  await page.getByLabel("Phone", { exact: true }).fill("(555) 321-0000");
+  await page.getByRole("button", { name: "Add customer" }).click();
+  await expect(page.getByRole("heading", { name: "Customer details" })).toBeVisible();
+
+  await page.getByLabel("Company").fill("Driver Fleet LLC");
+  await page.getByRole("button", { name: "Save customer" }).click();
+  await expect(page.getByText("Customer saved.")).toBeVisible();
+
+  await page.getByRole("button", { name: "Add vehicle" }).first().click();
+  await page.getByLabel("Make").fill("Toyota");
+  await page.getByLabel("Model").fill("Camry");
+  await page.getByRole("button", { name: "Add vehicle" }).last().click();
+  await expect(page.getByText("Vehicle saved.")).toBeVisible();
+  await expect(page.getByText("Toyota Camry")).toBeVisible();
+  await page.screenshot({ path: `${SHOTS}/customers.png`, fullPage: true });
+
+  await page.getByRole("button", { name: "Delete", exact: true }).click();
+  await page.getByRole("group", { name: "Delete vehicle?" }).getByRole("button", { name: "Delete" }).click();
+  await expect(page.getByText("No vehicles saved for this customer.")).toBeVisible();
+
+  await page.getByRole("button", { name: "Delete customer" }).click();
+  await page.getByRole("group", { name: /Delete customer/ }).getByRole("button", { name: "Delete" }).click();
+  await expect(page.getByText("Select a customer to view or edit")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Casey Driver/ })).toHaveCount(0);
+});
+
+test("a draft can be deleted after confirmation", async ({ page }) => {
+  await signIn(page);
+  await page.getByRole("button", { name: "New invoice" }).click();
+  await expect(page.getByRole("heading", { name: "Draft invoice" })).toBeVisible();
+  await page.getByRole("button", { name: "Delete draft" }).click();
+  await page.getByRole("group", { name: "Delete this draft?" }).getByRole("button", { name: "Delete" }).click();
+  await expect(page).toHaveURL(/\/invoices$/);
+});

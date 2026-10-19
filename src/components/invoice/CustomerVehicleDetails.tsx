@@ -28,7 +28,7 @@ function CustomerLookup({ update, disabled }: { update: Update; disabled: boolea
       const controller = new AbortController();
       abort.current = controller;
       setStatus("loading");
-      api<{ items: CustomerRecord[] }>(`/api/customers?q=${encodeURIComponent(trimmed)}`, { signal: controller.signal }).then(
+      api<{ items: CustomerRecord[] }>(`/api/customers?mode=lookup&q=${encodeURIComponent(trimmed)}`, { signal: controller.signal }).then(
         (data) => {
           setResults(data.items);
           setStatus("idle");

@@ -159,3 +159,52 @@ export function Alert({ tone = "red", children }: { tone?: "red" | "amber" | "bl
     </div>
   );
 }
+
+export function ConfirmButton({
+  label,
+  question,
+  confirmLabel = "Delete",
+  onConfirm,
+  disabled,
+  className = "",
+}: {
+  label: string;
+  question: string;
+  confirmLabel?: string;
+  onConfirm: () => Promise<void> | void;
+  disabled?: boolean;
+  className?: string;
+}) {
+  const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  if (!asking) {
+    return (
+      <Button variant="danger" className={className} disabled={disabled} onClick={() => setAsking(true)}>
+        {label}
+      </Button>
+    );
+  }
+  return (
+    <span role="group" aria-label={question} className={`inline-flex flex-wrap items-center gap-2 ${className}`}>
+      <span className="text-sm text-zinc-700">{question}</span>
+      <Button
+        variant="danger"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          try {
+            await onConfirm();
+          } finally {
+            setBusy(false);
+            setAsking(false);
+          }
+        }}
+      >
+        {busy ? "Working…" : confirmLabel}
+      </Button>
+      <Button variant="ghost" disabled={busy} onClick={() => setAsking(false)}>
+        Cancel
+      </Button>
+    </span>
+  );
+}

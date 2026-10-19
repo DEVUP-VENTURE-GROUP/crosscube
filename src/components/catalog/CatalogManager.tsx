@@ -64,6 +64,10 @@ export function CatalogManager() {
               taxCategories={taxCategories}
               onSaved={saved}
               onCancel={() => setEditing(null)}
+              onDeleted={(id) => {
+                setItems((current) => (current ?? []).filter((existing) => existing.id !== id).map((existing) => (existing.associatedLaborId === id ? { ...existing, associatedLaborId: null } : existing)));
+                setEditing(null);
+              }}
             />
           </Panel>
         </div>

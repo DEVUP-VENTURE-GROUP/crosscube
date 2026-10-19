@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Button, Checkbox, Field, MoneyInput, QuantityInput, Select, TextArea, TextInput } from "@/components/ui/controls";
+import { Alert, Button, Checkbox, ConfirmButton, Field, MoneyInput, QuantityInput, Select, TextArea, TextInput } from "@/components/ui/controls";
 import { api, ApiError } from "@/lib/http/client";
 import { formatRatePpm } from "@/lib/money/money";
 import type { CatalogItem, TaxCategory } from "@/modules/catalog/catalog.types";
@@ -36,12 +36,14 @@ export function CatalogItemForm({
   taxCategories,
   onSaved,
   onCancel,
+  onDeleted,
 }: {
   item: CatalogItem | null;
   catalog: CatalogItem[];
   taxCategories: TaxCategory[];
   onSaved: (item: CatalogItem) => void;
   onCancel: () => void;
+  onDeleted?: (id: string) => void;
 }) {
   const [form, setForm] = useState<CatalogItemInput>(item ? toInput(item) : EMPTY);
   const [keywords, setKeywords] = useState((item?.keywords ?? []).join(", "));
@@ -153,8 +155,25 @@ export function CatalogItemForm({
         <Button variant="ghost" onClick={onCancel} disabled={saving}>
           Cancel
         </Button>
+        {item && onDeleted && (
+          <ConfirmButton
+            className="ml-auto"
+            label="Delete item"
+            question={`Delete "${item.name}"?`}
+            onConfirm={async () => {
+              try {
+                await api(`/api/catalog/${item.id}`, { method: "DELETE" });
+                onDeleted(item.id);
+              } catch (e) {
+                setError(e instanceof ApiError ? e : new ApiError(0, "UNKNOWN", "Delete failed."));
+              }
+            }}
+          />
+        )}
       </div>
-      <p className="text-xs text-zinc-500">Changing a price affects new and draft invoices only. Finalized invoices keep the prices they were issued with.</p>
+      <p className="text-xs text-zinc-500">
+        Changing or deleting an item affects new and draft invoices only. Finalized invoices keep the items and prices they were issued with. To hide an item without deleting it, untick Active.
+      </p>
     </form>
   );
 }

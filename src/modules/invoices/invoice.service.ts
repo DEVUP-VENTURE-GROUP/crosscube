@@ -311,3 +311,36 @@ export async function recordPayment(id: string, version: number, payment: Paymen
   return toInvoice(updated);
 }
 
+
+// Corrects a payment entered by mistake; the removal is kept in the invoice history.
+export async function removePayment(id: string, version: number, paymentId: string): Promise<Invoice> {
+  const c = await db();
+  const doc = await c.invoices.findOne({ _id: id });
+  if (!doc) throw notFound("Invoice");
+  const payment = doc.payments.find((existing) => existing.id === paymentId);
+  if (!payment) return toInvoice(doc);
+  if (doc.status !== "FINALIZED") {
+    throw conflict("INVOICE_NOT_EDITABLE", "Payments on drafts are edited in the draft; void invoices cannot be changed.");
+  }
+  if (doc.version !== version) throw conflict("VERSION_CONFLICT", "This invoice changed elsewhere. Reload it to continue.");
+  const paymentsCents = doc.totals.paymentsCents - payment.amountCents;
+  const now = new Date();
+  const updated = await c.invoices.findOneAndUpdate(
+    { _id: id, status: "FINALIZED", version },
+    {
+      $pull: { payments: { id: paymentId } },
+      $push: {
+        events: {
+          type: "PAYMENT_REMOVED",
+          at: now.toISOString(),
+          details: { paymentId, amountCents: payment.amountCents, method: payment.method, receivedAt: payment.receivedAt },
+        },
+      },
+      $set: { "totals.paymentsCents": paymentsCents, "totals.balanceCents": doc.totals.totalCents - paymentsCents, updatedAt: now },
+      $inc: { version: 1 },
+    },
+    { returnDocument: "after" },
+  );
+  if (!updated) throw conflict("VERSION_CONFLICT", "This invoice changed elsewhere. Reload it to continue.");
+  return toInvoice(updated);
+}

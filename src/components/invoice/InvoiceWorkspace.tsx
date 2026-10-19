@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Badge, Button } from "@/components/ui/controls";
+import { Alert, Badge, Button, ConfirmButton } from "@/components/ui/controls";
 import { api, ApiError } from "@/lib/http/client";
 import { formatCents } from "@/lib/money/money";
 import { computeInvoice, type CatalogLookup } from "@/modules/invoices/invoice.compute";
@@ -127,6 +127,10 @@ export function InvoiceWorkspace() {
         setInvoice(next);
         go(next.id, "items");
       }}
+      onDeleted={() => {
+        writeStorage(CURRENT_DRAFT_KEY, null);
+        router.push("/invoices");
+      }}
     />
   );
 }
@@ -156,6 +160,7 @@ function DraftWorkspace({
   onTab,
   onNew,
   onOpen,
+  onDeleted,
 }: {
   initial: Invoice;
   reference: ReferenceData;
@@ -163,7 +168,9 @@ function DraftWorkspace({
   onTab: (tab: Tab) => void;
   onNew: () => void;
   onOpen: (invoice: Invoice) => void;
+  onDeleted: () => void;
 }) {
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const state = useInvoiceDraft(initial);
   const { invoice, draft, editable, saveState } = state;
   const [reviewed, setReviewed] = useState(tab === "invoice");
@@ -217,11 +224,32 @@ function DraftWorkspace({
         {invoice.isDemo && <Badge tone="amber">Demo record</Badge>}
         <SaveIndicator state={saveState} status={invoice.status} />
         <div className="ml-auto flex items-center gap-2">
+          {invoice.status === "DRAFT" && (
+            <ConfirmButton
+              label="Delete draft"
+              question="Delete this draft?"
+              onConfirm={async () => {
+                setDeleteError(null);
+                try {
+                  await state.flush();
+                  await api(`/api/invoices/${invoice.id}`, { method: "DELETE" });
+                  onDeleted();
+                } catch (e) {
+                  setDeleteError(e instanceof ApiError ? e.message : "Could not delete the draft.");
+                }
+              }}
+            />
+          )}
           <Button variant="ghost" onClick={onNew}>
             New invoice
           </Button>
         </div>
       </div>
+      {deleteError && (
+        <div className="mb-4">
+          <Alert>{deleteError}</Alert>
+        </div>
+      )}
       {saveState.kind === "conflict" && (
         <div className="mb-4">
           <Alert>

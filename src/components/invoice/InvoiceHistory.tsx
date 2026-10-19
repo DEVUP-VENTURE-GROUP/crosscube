@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Badge, Button } from "@/components/ui/controls";
+import { Alert, Badge, Button, ConfirmButton } from "@/components/ui/controls";
 import { api, ApiError, downloadFile } from "@/lib/http/client";
 import { formatCents } from "@/lib/money/money";
 import type { InvoiceStatus, InvoiceSummary } from "@/modules/invoices/invoice.types";
@@ -117,10 +117,25 @@ export function InvoiceHistory() {
                 <td className="px-3 py-2 text-right tabular-nums">{formatCents(item.totalCents)}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{formatCents(item.balanceCents)}</td>
                 <td className="px-3 py-2 whitespace-nowrap text-zinc-600">{new Date(item.finalizedAt ?? item.updatedAt).toLocaleDateString()}</td>
-                <td className="px-3 py-2 text-right">
+                <td className="px-3 py-2 text-right whitespace-nowrap">
                   <Button variant="ghost" className="h-8 text-xs" disabled={downloading !== null} onClick={() => void download(item.id)}>
                     {downloading === item.id ? "Preparing…" : "PDF"}
                   </Button>
+                  {item.status === "DRAFT" && (
+                    <ConfirmButton
+                      className="h-8 text-xs"
+                      label="Delete"
+                      question="Delete draft?"
+                      onConfirm={async () => {
+                        try {
+                          await api(`/api/invoices/${item.id}`, { method: "DELETE" });
+                          setItems((current) => current.filter((existing) => existing.id !== item.id));
+                        } catch (e) {
+                          setError(e instanceof ApiError ? e.message : "Delete failed.");
+                        }
+                      }}
+                    />
+                  )}
                 </td>
               </tr>
             ))}

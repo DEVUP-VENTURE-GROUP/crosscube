@@ -2,14 +2,14 @@ services:
   - type: web
     name: invoice-pdf-service
     runtime: docker
-    dockerfilePath: ./Dockerfile.pdf
+    dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: starter
     healthCheckPath: /healthz
     autoDeploy: true
     buildFilter:
       paths:
-        - Dockerfile.pdf
+        - Dockerfile
         - services/**
         - src/modules/pdf/**
         - src/modules/settings/settings.types.ts

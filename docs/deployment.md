@@ -7,7 +7,7 @@ Browser ──HTTPS──► Vercel: Next.js app (pages, API, auth)  ──► M
 ```
 
 - **Vercel** runs the whole web app: pages, sign-in, invoice/catalog/settings APIs. It is the only part with database credentials.
-- **Render** runs `services/pdf-server.ts` from `Dockerfile.pdf`. It receives a finished invoice layout, validates it, renders it with Chrome and returns the PDF. It has no database access and rejects any request without the shared token.
+- **Render** runs `services/pdf-server.ts` from `Dockerfile`. It receives a finished invoice layout, validates it, renders it with Chrome and returns the PDF. It has no database access and rejects any request without the shared token.
 
 Deploy Render first, because Vercel needs its URL and token.
 

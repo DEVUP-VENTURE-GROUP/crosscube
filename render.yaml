@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: invoice-pdf-service
+    runtime: docker
+    dockerfilePath: ./Dockerfile.pdf
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /healthz
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - Dockerfile.pdf
+        - services/**
+        - src/modules/pdf/**
+        - src/modules/settings/settings.types.ts
+        - src/lib/**
+        - package.json
+        - package-lock.json
+    envVars:
+      - key: PDF_SERVICE_TOKEN
+        generateValue: true
+      - key: PDF_MAX_CONCURRENCY
+        value: "2"
+      - key: PDF_RENDER_TIMEOUT_MS
+        value: "20000"

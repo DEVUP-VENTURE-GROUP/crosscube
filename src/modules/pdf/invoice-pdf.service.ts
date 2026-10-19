@@ -1,9 +1,10 @@
-import puppeteer, { type Browser } from "puppeteer";
+import type { Browser } from "puppeteer";
 import { AppError } from "@/lib/errors/app-error";
 import { logger } from "@/lib/logging/logger";
 import type { InvoiceDocumentModel } from "./invoice-document-model";
 import { PAGE_MARGIN, PAPER_DIMENSIONS } from "./invoice-document.css";
 import { renderInvoiceHtml } from "./invoice-html";
+import type { PdfRenderer } from "./remote-pdf-renderer";
 
 export interface PdfRendererOptions {
   maxConcurrency: number;
@@ -19,7 +20,7 @@ export function pdfFileName(model: InvoiceDocumentModel): string {
   return `invoice-${model.invoiceLabel.replace(/[^A-Za-z0-9-]/g, "_").slice(0, 40)}.pdf`;
 }
 
-export class InvoicePdfRenderer {
+export class InvoicePdfRenderer implements PdfRenderer {
   private browser: Promise<Browser> | null = null;
   private active = 0;
   private readonly waiting: (() => void)[] = [];
@@ -28,11 +29,19 @@ export class InvoicePdfRenderer {
 
   private getBrowser(): Promise<Browser> {
     if (!this.browser) {
-      const launching = puppeteer.launch({
-        headless: true,
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-        args: ["--disable-gpu", "--disable-dev-shm-usage", "--font-render-hinting=none"],
-      });
+      // Loaded lazily so deployments that use the remote PDF service never load Chrome.
+      const launching = import("puppeteer").then(({ default: puppeteer }) =>
+        puppeteer.launch({
+          headless: true,
+          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+          args: [
+            "--disable-gpu",
+            "--disable-dev-shm-usage",
+            "--font-render-hinting=none",
+            ...(process.env.CHROME_NO_SANDBOX === "true" ? ["--no-sandbox", "--disable-setuid-sandbox"] : []),
+          ],
+        }),
+      );
       this.browser = launching;
       launching.then(
         (browser) => browser.on("disconnected", () => {

@@ -53,6 +53,11 @@ Production: `npm run build && npm start`.
 | `PUPPETEER_EXECUTABLE_PATH` | no | Use an installed Chrome/Chromium |
 | `PDF_MAX_CONCURRENCY` | no (`2`) | Parallel PDF renders per server process (excess requests queue, max 20, then 503) |
 | `PDF_RENDER_TIMEOUT_MS` | no (`20000`) | Per-render timeout |
+| `PDF_SERVICE_URL`, `PDF_SERVICE_TOKEN` | no | Use the standalone PDF service instead of local Chrome (see `docs/deployment.md`) |
+
+## Deployment
+
+Production runs as two pieces: the Next.js app on **Vercel** and the PDF renderer (`services/pdf-server.ts`, Chrome in Docker) on **Render**. Step-by-step instructions, environment variables and DNS records are in [`docs/deployment.md`](docs/deployment.md).
 
 ## Configure your shop
 

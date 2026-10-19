@@ -81,7 +81,11 @@ export const DEFAULT_SETTINGS: ShopSettingsInput = {
   showSignatureLines: true,
 };
 
+const BUSINESS_KEYS = (Object.keys(settingsInputSchema.shape) as (keyof ShopSettingsInput)[]).filter(
+  (key): key is keyof BusinessSnapshot => key !== "invoiceNumberPrefix" && key !== "invoiceNumberPad",
+);
+
+// Copies only business fields, so stored records' extras (updatedAt, nextInvoiceNumber, _id) never leak into snapshots.
 export function toBusinessSnapshot(settings: ShopSettingsInput): BusinessSnapshot {
-  const { invoiceNumberPrefix: _prefix, invoiceNumberPad: _pad, ...business } = settings;
-  return business;
+  return Object.fromEntries(BUSINESS_KEYS.map((key) => [key, settings[key]])) as unknown as BusinessSnapshot;
 }

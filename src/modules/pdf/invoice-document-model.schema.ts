@@ -11,7 +11,7 @@ export const invoiceDocumentModelSchema = z
     watermark: z.enum(["DRAFT", "VOID"]).nullable(),
     demoNotice: z.boolean(),
     paperSize: z.enum(PAPER_SIZES),
-    business: settingsInputSchema.omit({ invoiceNumberPrefix: true, invoiceNumberPad: true }),
+    business: settingsInputSchema.omit({ invoiceNumberPrefix: true, invoiceNumberPad: true }).strip(),
     businessAddress: rows(text(200)),
     businessContact: text(200),
     invoiceLabel: text(60),

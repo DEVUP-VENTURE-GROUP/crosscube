@@ -18,7 +18,7 @@ Deploy Render first, because Vercel needs its URL and token.
 3. Wait for the first deploy to finish. `https://<service>.onrender.com/healthz` must return `{"ok":true}`.
 4. Copy the service URL (e.g. `https://invoice-pdf-service.onrender.com`).
 
-Starter (always-on) is recommended. The free plan sleeps after inactivity, so the first PDF after a pause would wait about a minute.
+Starter (always-on) is recommended. On the free plan the service sleeps after 15 idle minutes; the app keeps it awake with a Vercel Cron job (`vercel.json`) that calls `/api/cron/keep-warm` every 10 minutes. That route pings the service's `/healthz` and only accepts Vercel's `CRON_SECRET` bearer token. Set `CRON_SECRET` (any random 32+ character string) in Vercel. One always-awake free service uses about 744 of Render's 750 free instance hours per month, so keep other free Render services off this account or move to Starter.
 
 ## 2. Web app on Vercel
 
@@ -34,6 +34,7 @@ Starter (always-on) is recommended. The free plan sleeps after inactivity, so th
 | `AUTH_SECRET` | from `npm run auth:hash-password` (32+ characters) |
 | `PDF_SERVICE_URL` | the Render URL from step 1 |
 | `PDF_SERVICE_TOKEN` | the Render token from step 1 |
+| `CRON_SECRET` | random 32+ characters; lets Vercel Cron call the keep-warm route |
 
 3. **Deploy**. Every push to `main` redeploys both Vercel and Render automatically.
 4. Open the `*.vercel.app` URL, sign in, download a PDF to confirm the Render connection.

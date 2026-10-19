@@ -51,6 +51,17 @@ describe("standalone PDF service", () => {
     expect(text).toContain("Part Description");
   });
 
+  it("accepts documents built from stored settings records with extra fields", async () => {
+    const stored = { ...DEMO_SETTINGS, nextInvoiceNumber: 12, updatedAt: new Date().toISOString(), _id: "shop" };
+    const fromStored = { ...model(), business: toBusinessSnapshot(stored) };
+    expect(Object.keys(fromStored.business)).not.toContain("updatedAt");
+    expect(Object.keys(fromStored.business)).not.toContain("nextInvoiceNumber");
+    const legacy = { ...model(), business: { ...model().business, updatedAt: "2026-01-01T00:00:00.000Z" } };
+    const response = await post(JSON.stringify({ model: legacy }));
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("application/pdf");
+  });
+
   it("rejects missing or wrong tokens", async () => {
     expect((await post(JSON.stringify({ model: model() }), { Authorization: "" })).status).toBe(401);
     expect((await post(JSON.stringify({ model: model() }), { Authorization: `Bearer ${TOKEN}x` })).status).toBe(401);

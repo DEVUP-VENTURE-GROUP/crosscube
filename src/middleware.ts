@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { authConfig } from "@/lib/auth/config";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth/session";
 
-const PUBLIC_PATHS = new Set(["/login", "/api/auth/login", "/api/auth/logout", "/api/auth/session"]);
+// The cron route authenticates itself with CRON_SECRET.
+const PUBLIC_PATHS = new Set(["/login", "/api/auth/login", "/api/auth/logout", "/api/auth/session", "/api/cron/keep-warm"]);
 
 function apiError(status: number, code: string, message: string) {
   return NextResponse.json({ error: { code, message } }, { status });

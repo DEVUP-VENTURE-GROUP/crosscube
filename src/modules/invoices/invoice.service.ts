@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import { MongoServerError } from "mongodb";
 import type { Collections, InvoiceDoc } from "@/lib/db/collections";
 import { db } from "@/lib/db/mongo";
@@ -7,9 +8,9 @@ import { formatCents } from "@/lib/money/money";
 import { loadCatalogLookup } from "@/modules/catalog/catalog.service";
 import { upsertCustomer, upsertVehicle } from "@/modules/customers/customer.service";
 import { readSettings } from "@/modules/settings/settings.service";
-import { toBusinessSnapshot } from "@/modules/settings/settings.types";
+import { toBusinessSnapshot, type NumberingMode } from "@/modules/settings/settings.types";
 import { computeInvoice, hasErrors, type ComputedInvoice } from "./invoice.compute";
-import { formatInvoiceNumber } from "./invoice-number.service";
+import { formatInvoiceNumber, MAX_GAP, MIN_GAP } from "./invoice-number.service";
 import { draftFromDoc, findInvoicePage, toInvoice } from "./invoice.repository";
 import { EMPTY_CUSTOMER, EMPTY_VEHICLE, type Invoice, type InvoiceEvent, type InvoiceStatus, type Issue, type Payment } from "./invoice.types";
 import type { DraftInput } from "./invoice.validation";
@@ -137,8 +138,11 @@ export async function deleteDraft(id: string): Promise<void> {
   if (result.deletedCount === 0) await explainRejectedWrite(c, id);
 }
 
-async function reserveSequence(c: Collections, id: string, token: string): Promise<number> {
-  const counter = await c.counters.findOneAndUpdate({ _id: "invoice" }, { $inc: { next: 1 } }, { upsert: true, returnDocument: "after" });
+// The counter holds the lowest number the next invoice may take; one atomic $inc both reserves the number and,
+// in RANDOM_GAP mode, skips 1–8 numbers so the series keeps rising without revealing how many invoices exist.
+async function reserveSequence(c: Collections, id: string, token: string, mode: NumberingMode): Promise<number> {
+  const step = mode === "RANDOM_GAP" ? randomInt(MIN_GAP, MAX_GAP + 1) : 1;
+  const counter = await c.counters.findOneAndUpdate({ _id: "invoice" }, { $inc: { next: step } }, { upsert: true, returnDocument: "after" });
   const sequence = counter!.next - 1;
   const stored = await c.invoices.updateOne({ _id: id, "lock.token": token }, { $set: { reservedSequence: sequence } });
   if (stored.matchedCount === 0) {
@@ -188,7 +192,7 @@ export async function finalizeInvoice(id: string): Promise<{ invoice: Invoice; a
     if (!locked) continue;
 
     try {
-      const sequence = locked.reservedSequence ?? (await reserveSequence(c, id, token));
+      const sequence = locked.reservedSequence ?? (await reserveSequence(c, id, token, settings.numberingMode));
       const invoiceNumber = formatInvoiceNumber(sequence, settings.invoiceNumberPrefix, settings.invoiceNumberPad);
       const customerId = await upsertCustomer(c, draft.customerId, draft.customer, now);
       const vehicleId = await upsertVehicle(c, draft.vehicleId, draft.vehicle, customerId, now);

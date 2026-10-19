@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 export const PAPER_SIZES = ["LETTER", "A4"] as const;
+export const NUMBERING_MODES = ["SEQUENTIAL", "RANDOM_GAP"] as const;
+export type NumberingMode = (typeof NUMBERING_MODES)[number];
 export type PaperSize = (typeof PAPER_SIZES)[number];
 
 const text = (max: number) => z.string().trim().max(max);
@@ -37,6 +39,7 @@ export const settingsInputSchema = z
     invoiceTitle: text(40).min(1),
     invoiceNumberPrefix: z.string().trim().regex(/^[A-Za-z0-9-]{0,12}$/, "Prefix may only contain letters, digits and dashes"),
     invoiceNumberPad: z.number().int().min(1).max(10),
+    numberingMode: z.enum(NUMBERING_MODES),
     paperSize: z.enum(PAPER_SIZES),
     timeZone: z.string().trim().min(1).refine(isValidTimeZone, "Unknown time zone"),
     shopSuppliesInParts: z.boolean(),
@@ -54,7 +57,7 @@ export interface ShopSettings extends ShopSettingsInput {
   updatedAt: string | null;
 }
 
-export type BusinessSnapshot = Omit<ShopSettingsInput, "invoiceNumberPrefix" | "invoiceNumberPad">;
+export type BusinessSnapshot = Omit<ShopSettingsInput, "invoiceNumberPrefix" | "invoiceNumberPad" | "numberingMode">;
 
 export const DEFAULT_SETTINGS: ShopSettingsInput = {
   businessName: "Your Business Name",
@@ -72,6 +75,7 @@ export const DEFAULT_SETTINGS: ShopSettingsInput = {
   invoiceTitle: "Invoice",
   invoiceNumberPrefix: "",
   invoiceNumberPad: 5,
+  numberingMode: "SEQUENTIAL",
   paperSize: "LETTER",
   timeZone: "America/New_York",
   shopSuppliesInParts: true,
@@ -82,7 +86,7 @@ export const DEFAULT_SETTINGS: ShopSettingsInput = {
 };
 
 const BUSINESS_KEYS = (Object.keys(settingsInputSchema.shape) as (keyof ShopSettingsInput)[]).filter(
-  (key): key is keyof BusinessSnapshot => key !== "invoiceNumberPrefix" && key !== "invoiceNumberPad",
+  (key): key is keyof BusinessSnapshot => key !== "invoiceNumberPrefix" && key !== "invoiceNumberPad" && key !== "numberingMode",
 );
 
 // Copies only business fields, so stored records' extras (updatedAt, nextInvoiceNumber, _id) never leak into snapshots.

@@ -5,8 +5,8 @@ import { Alert, Button, Checkbox, ConfirmButton, Field, IntegerInput, Panel, Sel
 import { api, ApiError } from "@/lib/http/client";
 import { formatRatePpm, parsePercentToPpm } from "@/lib/money/money";
 import type { TaxCategory } from "@/modules/catalog/catalog.types";
-import { formatInvoiceNumber } from "@/modules/invoices/invoice-number.service";
-import { MAX_LOGO_DATA_URL_LENGTH, PAPER_SIZES, type ShopSettings, type ShopSettingsInput } from "@/modules/settings/settings.types";
+import { formatInvoiceNumber, MAX_GAP, MIN_GAP } from "@/modules/invoices/invoice-number.service";
+import { MAX_LOGO_DATA_URL_LENGTH, PAPER_SIZES, type NumberingMode, type ShopSettings, type ShopSettingsInput } from "@/modules/settings/settings.types";
 
 type TextKey = { [K in keyof ShopSettingsInput]: ShopSettingsInput[K] extends string ? K : never }[keyof ShopSettingsInput];
 
@@ -257,7 +257,24 @@ export function SettingsForm() {
             <Field label="Digits" className="col-span-1">
               {(id) => <IntegerInput id={id} value={settings.invoiceNumberPad} onCommit={(value) => value !== null && set("invoiceNumberPad", Math.min(Math.max(value, 1), 10))} />}
             </Field>
-            <Field label="Next number" error={issues.get("nextInvoiceNumber")} hint={`Next: ${formatInvoiceNumber(nextNumber ?? 1, settings.invoiceNumberPrefix, settings.invoiceNumberPad)}`} className="col-span-2">
+            <Field label="Numbering" className="col-span-2 sm:col-span-3">
+              {(id) => (
+                <Select id={id} value={settings.numberingMode} onChange={(event) => set("numberingMode", event.target.value as NumberingMode)}>
+                  <option value="SEQUENTIAL">Sequential (+1 each invoice)</option>
+                  <option value="RANDOM_GAP">Rising with random gaps (+{MIN_GAP} to +{MAX_GAP})</option>
+                </Select>
+              )}
+            </Field>
+            <Field
+              label="Next number"
+              error={issues.get("nextInvoiceNumber")}
+              hint={
+                settings.numberingMode === "RANDOM_GAP"
+                  ? `Next: between ${formatInvoiceNumber((nextNumber ?? 1) + MIN_GAP - 1, settings.invoiceNumberPrefix, settings.invoiceNumberPad)} and ${formatInvoiceNumber((nextNumber ?? 1) + MAX_GAP - 1, settings.invoiceNumberPrefix, settings.invoiceNumberPad)}`
+                  : `Next: ${formatInvoiceNumber(nextNumber ?? 1, settings.invoiceNumberPrefix, settings.invoiceNumberPad)}`
+              }
+              className="col-span-2 sm:col-span-3"
+            >
               {(id, d) => <IntegerInput id={id} aria-describedby={d} value={nextNumber} onCommit={setNextNumber} />}
             </Field>
             <Field label="Paper size" className="col-span-1 sm:col-span-2">

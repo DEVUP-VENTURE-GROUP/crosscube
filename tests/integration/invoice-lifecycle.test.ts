@@ -233,6 +233,27 @@ describe("after finalization", () => {
 });
 
 describe("settings and numbering", () => {
+  it("issues unique, rising numbers with random gaps of 2-9 when configured", async () => {
+    const { nextInvoiceNumber, updatedAt: _u, ...input } = await getSettings();
+    const start = nextInvoiceNumber + 22_000;
+    await updateSettings({ ...input, numberingMode: "RANDOM_GAP" }, start);
+    try {
+      const drafts = await Promise.all(Array.from({ length: 20 }, () => createDraft(key(), referenceDraft())));
+      const numbers = (await Promise.all(drafts.map((draft) => finalizeInvoice(draft.id)))).map((r) => r.invoice.sequenceNumber!).sort((a, b) => a - b);
+      expect(new Set(numbers).size).toBe(20);
+      expect(numbers[0]).toBeGreaterThanOrEqual(start + 1);
+      expect(numbers[0]).toBeLessThanOrEqual(start + 8);
+      for (let i = 1; i < numbers.length; i++) {
+        const gap = numbers[i]! - numbers[i - 1]!;
+        expect(gap).toBeGreaterThanOrEqual(2);
+        expect(gap).toBeLessThanOrEqual(9);
+      }
+      expect(new Set(numbers.slice(1).map((n, i) => n - numbers[i]!)).size).toBeGreaterThan(1);
+    } finally {
+      await updateSettings({ ...input, numberingMode: "SEQUENTIAL" }, undefined);
+    }
+  });
+
   it("allows raising but never lowering the next invoice number", async () => {
     const settings = await getSettings();
     const { nextInvoiceNumber, updatedAt: _u, ...input } = settings;
